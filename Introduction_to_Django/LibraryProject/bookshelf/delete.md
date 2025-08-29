@@ -19,3 +19,5 @@ except Book.DoesNotExist:
 
 # Alternative bulk delete
 # Book.objects.filter(title="Nineteen Eighty-Four").delete()
+
+ # from bookshelf.models import Book
