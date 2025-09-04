@@ -8,8 +8,16 @@ from . import views
 app_name = 'relationship_app'
 
 urlpatterns = [
+    # Authentication URLs
+    path('login/', views.CustomLoginView.as_view(), name='login'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('register/', views.register, name='register'),
+    
     # Function-based view for listing all books
     path('books/', views.list_books, name='list_books'),
+    
+    # Protected version of books (requires login)
+    path('books/protected/', views.list_books_protected, name='list_books_protected'),
     
     # Alternative simple function-based view
     path('books/simple/', views.list_books_simple, name='list_books_simple'),

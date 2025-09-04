@@ -1,117 +1,85 @@
 # relationship_app/views.py
+# Add these authentication views to your existing views.py file
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.urls import reverse_lazy
 from .models import Book, Author, Librarian
 from .models import Library
 
-def list_books(request):
+# Your existing views here (keep all your previous view functions)...
+
+# Authentication Views
+
+class CustomLoginView(LoginView):
     """
-    Function-based view that lists all books stored in the database.
-    Returns a simple text list of book titles and their authors.
+    Custom login view using Django's built-in LoginView
     """
-    # Get all books from the database
+    template_name = 'relationship_app/login.html'
+    redirect_authenticated_user = True
+    
+    def get_success_url(self):
+        return reverse_lazy('relationship_app:list_books')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'You have successfully logged in!')
+        return super().form_valid(form)
+
+class CustomLogoutView(LogoutView):
+    """
+    Custom logout view using Django's built-in LogoutView
+    """
+    template_name = 'relationship_app/logout.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, 'You have been logged out successfully.')
+        return super().dispatch(request, *args, **kwargs)
+
+def register(request):
+    """
+    User registration view using Django's built-in UserCreationForm
+    """
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}! You can now log in.')
+            login(request, user)  # Automatically log in the user after registration
+            return redirect('relationship_app:list_books')  # Redirect to books list
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserCreationForm()
+    
+    return render(request, 'relationship_app/register.html', {'form': form})
+
+# Enhanced existing views with authentication decorators
+
+@login_required
+def list_books_protected(request):
+    """
+    Protected version of list_books that requires authentication
+    """
     books = Book.objects.all()
     
-    # For simple text output (without template)
     if request.GET.get('format') == 'text':
-        response_content = "List of All Books:\n\n"
+        response_content = f"List of All Books (User: {request.user.username}):\n\n"
         for book in books:
             response_content += f"• {book.title} by {book.author.name}\n"
         return HttpResponse(response_content, content_type="text/plain")
     
-    # For HTML template rendering
     context = {
-        'books': books
+        'books': books,
+        'user': request.user
     }
     return render(request, 'relationship_app/list_books.html', context)
 
-def list_books_simple(request):
-    """
-    Alternative simple function-based view for listing books
-    Returns plain text response
-    """
-    books = Book.objects.all()
-    book_list = []
-    
-    for book in books:
-        book_list.append(f"{book.title} by {book.author.name}")
-    
-    response_content = "\n".join(book_list)
-    return HttpResponse(response_content, content_type="text/plain")
-
-class LibraryDetailView(DetailView):
-    """
-    Class-based view that displays details for a specific library,
-    listing all books available in that library.
-    Utilizes Django's DetailView.
-    """
-    model = Library
-    template_name = 'relationship_app/library_detail.html'
-    context_object_name = 'library'
-    
-    def get_context_data(self, **kwargs):
-        """
-        Add extra context data to the template
-        """
-        context = super().get_context_data(**kwargs)
-        # The library object is automatically available as 'library'
-        # We can add additional context if needed
-        library = self.get_object()
-        context['book_count'] = library.books.count()
-        context['librarian'] = getattr(library, 'librarian', None)
-        return context
-
-class LibraryListView(ListView):
-    """
-    Class-based view that displays a list of all libraries.
-    Alternative class-based view using ListView.
-    """
-    model = Library
-    template_name = 'relationship_app/library_list.html'
-    context_object_name = 'libraries'
-    
-    def get_queryset(self):
-        """
-        Optimize the queryset by prefetching related books
-        """
-        return Library.objects.prefetch_related('books__author')
-
-class BookDetailView(DetailView):
-    """
-    Class-based view for displaying individual book details
-    """
-    model = Book
-    template_name = 'relationship_app/book_detail.html'
-    context_object_name = 'book'
-
-def library_books(request, library_id):
-    """
-    Function-based view to display books in a specific library
-    Alternative to the class-based approach
-    """
-    library = get_object_or_404(Library, pk=library_id)
-    books = library.books.all()
-    
-    context = {
-        'library': library,
-        'books': books,
-        'book_count': books.count()
-    }
-    return render(request, 'relationship_app/library_books.html', context)
-
-def author_books(request, author_name):
-    """
-    Function-based view to display all books by a specific author
-    """
-    author = get_object_or_404(Author, name=author_name)
-    books = author.books.all()
-    
-    context = {
-        'author': author,
-        'books': books,
-        'book_count': books.count()
-    }
-    return render(request, 'relationship_app/author_books.html', context)
+# Keep all your existing views (list_books, LibraryDetailView, etc.) as they were...
