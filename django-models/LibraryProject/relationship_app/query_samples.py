@@ -71,7 +71,20 @@ def query_books_by_author():
     print(f"Total books: {books.count()}")
     print()
     
-    # Method 2: Get author first, then use reverse relationship
+    # Method 2: Get author first, then filter books by that author object
+    author_name = "George Orwell"
+    try:
+        author = Author.objects.get(name=author_name)
+        books = Book.objects.filter(author=author)  # Using required pattern
+        
+        print(f"Books by {author.name} (using required pattern):")
+        for book in books:
+            print(f"  - {book.title}")
+        print(f"Total books: {books.count()}")
+    except Author.DoesNotExist:
+        print(f"Author '{author_name}' not found")
+    
+    # Method 3: Using reverse relationship
     try:
         author = Author.objects.get(name="George Orwell")
         books = author.books.all()  # Using related_name='books'
