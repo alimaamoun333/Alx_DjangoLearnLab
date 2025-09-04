@@ -2,7 +2,8 @@
 
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
+from django.views.generic.detail import DetailView
 from .models import Book, Author, Librarian
 from .models import Library
 
