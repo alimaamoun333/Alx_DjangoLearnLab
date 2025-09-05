@@ -1,69 +1,67 @@
-# relationship_app/models.py
-
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-class Author(models.Model):
-    """
-    Author model representing book authors
-    """
-    name = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        ordering = ['name']
 
-class Book(models.Model):
+class UserProfile(models.Model):
     """
-    Book model with ForeignKey relationship to Author
-    One author can have many books (One-to-Many relationship)
+    UserProfile model to extend Django's built-in User model with role-based access control.
     """
-    title = models.CharField(max_length=200)
-    author = models.ForeignKey(
-        Author, 
+    ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Librarian', 'Librarian'),
+        ('Member', 'Member'),
+    ]
+    
+    user = models.OneToOneField(
+        User,
         on_delete=models.CASCADE,
-        related_name='books'  # Allows reverse lookup: author.books.all()
+        related_name='profile'
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='Member',
+        help_text="Select the user's role for access control"
     )
     
-    def __str__(self):
-        return f"{self.title} by {self.author.name}"
-    
     class Meta:
-        ordering = ['title']
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role}"
+    
+    def is_admin(self):
+        """Check if user has Admin role"""
+        return self.role == 'Admin'
+    
+    def is_librarian(self):
+        """Check if user has Librarian role"""
+        return self.role == 'Librarian'
+    
+    def is_member(self):
+        """Check if user has Member role"""
+        return self.role == 'Member'
 
-class Library(models.Model):
-    """
-    Library model with ManyToMany relationship to Book
-    One library can have many books, and one book can be in many libraries
-    """
-    name = models.CharField(max_length=100)
-    books = models.ManyToManyField(
-        Book,
-        related_name='libraries'  # Allows reverse lookup: book.libraries.all()
-    )
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        ordering = ['name']
-        verbose_name_plural = "Libraries"
 
-class Librarian(models.Model):
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
     """
-    Librarian model with OneToOne relationship to Library
-    Each library has exactly one librarian, and each librarian manages one library
+    Signal to automatically create a UserProfile when a new User is created.
     """
-    name = models.CharField(max_length=100)
-    library = models.OneToOneField(
-        Library,
-        on_delete=models.CASCADE,
-        related_name='librarian'  # Allows reverse lookup: library.librarian
-    )
-    
-    def __str__(self):
-        return f"{self.name} - Librarian of {self.library.name}"
-    
-    class Meta:
-        ordering = ['name']
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """
+    Signal to save the UserProfile when User is saved.
+    """
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        # Create profile if it doesn't exist (edge case handling)
+        UserProfile.objects.create(user=instance)

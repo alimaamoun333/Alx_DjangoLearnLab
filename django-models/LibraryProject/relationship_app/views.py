@@ -1,85 +1,123 @@
-# relationship_app/views.py
-# Add these authentication views to your existing views.py file
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponseForbidden
+from django.contrib.auth.models import User
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from django.views.generic import ListView
-from django.views.generic.detail import DetailView
-from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.urls import reverse_lazy
-from .models import Book, Author, Librarian
-from .models import Library
 
-# Your existing views here (keep all your previous view functions)...
-
-# Authentication Views
-
-class CustomLoginView(LoginView):
+def user_has_role(role):
     """
-    Custom login view using Django's built-in LoginView
+    Helper function to create a test function for checking user roles.
+    Returns a function that can be used with @user_passes_test decorator.
     """
-    template_name = 'relationship_app/login.html'
-    redirect_authenticated_user = True
-    
-    def get_success_url(self):
-        return reverse_lazy('relationship_app:list_books')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'You have successfully logged in!')
-        return super().form_valid(form)
+    def check_role(user):
+        if not user.is_authenticated:
+            return False
+        try:
+            return user.profile.role == role
+        except:
+            return False
+    return check_role
 
-class CustomLogoutView(LogoutView):
-    """
-    Custom logout view using Django's built-in LogoutView
-    """
-    template_name = 'relationship_app/logout.html'
-    
-    def dispatch(self, request, *args, **kwargs):
-        messages.info(request, 'You have been logged out successfully.')
-        return super().dispatch(request, *args, **kwargs)
 
-def register(request):
-    """
-    User registration view using Django's built-in UserCreationForm
-    """
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}! You can now log in.')
-            login(request, user)  # Automatically log in the user after registration
-            return redirect('relationship_app:list_books')  # Redirect to books list
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = UserCreationForm()
-    
-    return render(request, 'relationship_app/register.html', {'form': form})
+def is_admin(user):
+    """Check if user has Admin role"""
+    if not user.is_authenticated:
+        return False
+    try:
+        return user.profile.role == 'Admin'
+    except:
+        return False
 
-# Enhanced existing views with authentication decorators
+
+def is_librarian(user):
+    """Check if user has Librarian role"""
+    if not user.is_authenticated:
+        return False
+    try:
+        return user.profile.role == 'Librarian'
+    except:
+        return False
+
+
+def is_member(user):
+    """Check if user has Member role"""
+    if not user.is_authenticated:
+        return False
+    try:
+        return user.profile.role == 'Member'
+    except:
+        return False
+
 
 @login_required
-def list_books_protected(request):
+@user_passes_test(is_admin, login_url='/access-denied/')
+def admin_view(request):
     """
-    Protected version of list_books that requires authentication
+    Admin-only view that displays administrative content.
+    Only users with 'Admin' role can access this view.
     """
-    books = Book.objects.all()
-    
-    if request.GET.get('format') == 'text':
-        response_content = f"List of All Books (User: {request.user.username}):\n\n"
-        for book in books:
-            response_content += f"• {book.title} by {book.author.name}\n"
-        return HttpResponse(response_content, content_type="text/plain")
+    context = {
+        'user': request.user,
+        'role': request.user.profile.role,
+        'page_title': 'Admin Dashboard',
+        'welcome_message': f'Welcome {request.user.username}! You have administrator privileges.',
+    }
+    return render(request, 'admin_view.html', context)
+
+
+@login_required
+@user_passes_test(is_librarian, login_url='/access-denied/')
+def librarian_view(request):
+    """
+    Librarian-only view that displays librarian-specific content.
+    Only users with 'Librarian' role can access this view.
+    """
+    context = {
+        'user': request.user,
+        'role': request.user.profile.role,
+        'page_title': 'Librarian Dashboard',
+        'welcome_message': f'Welcome {request.user.username}! You have librarian access.',
+    }
+    return render(request, 'librarian_view.html', context)
+
+
+@login_required
+@user_passes_test(is_member, login_url='/access-denied/')
+def member_view(request):
+    """
+    Member-only view that displays member-specific content.
+    Only users with 'Member' role can access this view.
+    """
+    context = {
+        'user': request.user,
+        'role': request.user.profile.role,
+        'page_title': 'Member Dashboard',
+        'welcome_message': f'Welcome {request.user.username}! You have member access.',
+    }
+    return render(request, 'member_view.html', context)
+
+
+def access_denied_view(request):
+    """
+    View to display when user doesn't have permission to access a page.
+    """
+    context = {
+        'message': 'You do not have permission to access this page.',
+        'user_role': request.user.profile.role if request.user.is_authenticated and hasattr(request.user, 'profile') else 'Unknown'
+    }
+    return render(request, 'access_denied.html', context, status=403)
+
+
+@login_required
+def home_view(request):
+    """
+    Home view that shows different content based on user role.
+    """
+    user_role = request.user.profile.role if hasattr(request.user, 'profile') else 'No Role'
     
     context = {
-        'books': books,
-        'user': request.user
+        'user': request.user,
+        'role': user_role,
+        'page_title': 'Dashboard Home',
     }
-    return render(request, 'relationship_app/list_books.html', context)
-
-# Keep all your existing views (list_books, LibraryDetailView, etc.) as they were...
+    return render(request, 'home.html', context)
