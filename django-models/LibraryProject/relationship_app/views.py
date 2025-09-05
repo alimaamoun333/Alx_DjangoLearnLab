@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test, permission_required  # Added permission_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -47,6 +47,24 @@ is_librarian = user_has_role(ROLES['LIBRARIAN'])
 is_member = user_has_role(ROLES['MEMBER'])
 
 
+def has_book_permission(user, permission_type):
+    """Check if user has specific book permission based on their role"""
+    if not user.is_authenticated or not hasattr(user, 'profile'):
+        return False
+    
+    role = user.profile.role
+    # Admin has all permissions
+    if role == ROLES['ADMIN']:
+        return True
+    # Librarian has add/edit permissions but not delete
+    elif role == ROLES['LIBRARIAN']:
+        return permission_type in ['add', 'change']
+    # Member has no permissions
+    elif role == ROLES['MEMBER']:
+        return False
+    return False
+
+
 # Book list view - accessible to all authenticated users
 @login_required
 def list_books(request):
@@ -60,11 +78,13 @@ def list_books(request):
     return render(request, 'relationship_app/list_books.html', context)
 
 
-# Permission-protected views for book operations
+# Role-protected views for book operations (using role-based checks instead of permissions)
 @login_required
-@permission_required('relationship_app.add_book', raise_exception=True)  # Changed to standard permission name
 def add_book(request):
-    """Add a new book - requires add_book permission"""
+    """Add a new book - requires Admin or Librarian role"""
+    if not has_book_permission(request.user, 'add'):
+        return redirect('access_denied')
+    
     if request.method == 'POST':
         form = BookForm(request.POST, request.FILES)
         if form.is_valid():
@@ -85,9 +105,11 @@ def add_book(request):
 
 
 @login_required
-@permission_required('relationship_app.change_book', raise_exception=True)  # Changed to standard permission name
 def edit_book(request, book_id):
-    """Edit an existing book - requires change_book permission"""
+    """Edit an existing book - requires Admin or Librarian role"""
+    if not has_book_permission(request.user, 'change'):
+        return redirect('access_denied')
+    
     book = get_object_or_404(Book, id=book_id)
     
     if request.method == 'POST':
@@ -111,9 +133,11 @@ def edit_book(request, book_id):
 
 
 @login_required
-@permission_required('relationship_app.delete_book', raise_exception=True)  # Changed to standard permission name
 def delete_book(request, book_id):
-    """Delete a book - requires delete_book permission"""
+    """Delete a book - requires Admin role only"""
+    if not has_book_permission(request.user, 'delete'):
+        return redirect('access_denied')
+    
     book = get_object_or_404(Book, id=book_id)
     
     if request.method == 'POST':
@@ -131,7 +155,7 @@ def delete_book(request, book_id):
     return render(request, 'relationship_app/delete_book.html', context)
 
 
-# Role-based views from previous implementation
+# Role-based dashboard views
 @login_required
 @user_passes_test(is_admin, login_url='/access-denied/')
 def admin_view(request):
