@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required  # Added permission_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Book, Author, UserProfile
 from django.forms import ModelForm
+from django import forms
 
 
 class BookForm(ModelForm):
@@ -17,34 +18,33 @@ class BookForm(ModelForm):
         }
 
 
-def is_admin(user):
-    """Check if user has Admin role"""
-    if not user.is_authenticated:
-        return False
-    try:
-        return user.profile.role == 'Admin'
-    except:
-        return False
+# Role constants for consistency
+ROLES = {
+    'ADMIN': 'Admin',
+    'LIBRARIAN': 'Librarian',
+    'MEMBER': 'Member'
+}
 
 
-def is_librarian(user):
-    """Check if user has Librarian role"""
-    if not user.is_authenticated:
-        return False
-    try:
-        return user.profile.role == 'Librarian'
-    except:
-        return False
+def user_has_role(role):
+    """
+    Helper function to create a test function for checking user roles.
+    Returns a function that can be used with @user_passes_test decorator.
+    """
+    def check_role(user):
+        if not user.is_authenticated:
+            return False
+        try:
+            return hasattr(user, 'profile') and user.profile.role == role
+        except:
+            return False
+    return check_role
 
 
-def is_member(user):
-    """Check if user has Member role"""
-    if not user.is_authenticated:
-        return False
-    try:
-        return user.profile.role == 'Member'
-    except:
-        return False
+# Create role checkers using the factory function
+is_admin = user_has_role(ROLES['ADMIN'])
+is_librarian = user_has_role(ROLES['LIBRARIAN'])
+is_member = user_has_role(ROLES['MEMBER'])
 
 
 # Book list view - accessible to all authenticated users
@@ -62,15 +62,15 @@ def list_books(request):
 
 # Permission-protected views for book operations
 @login_required
-@permission_required('relationship_app.can_add_book', raise_exception=True)
+@permission_required('relationship_app.add_book', raise_exception=True)  # Changed to standard permission name
 def add_book(request):
-    """Add a new book - requires can_add_book permission"""
+    """Add a new book - requires add_book permission"""
     if request.method == 'POST':
-        form = BookForm(request.POST)
+        form = BookForm(request.POST, request.FILES)
         if form.is_valid():
             book = form.save()
             messages.success(request, f'Book "{book.title}" has been added successfully!')
-            return redirect('relationship_app:list_books')
+            return redirect('list_books')
     else:
         form = BookForm()
     
@@ -81,21 +81,21 @@ def add_book(request):
         'user': request.user,
         'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
     }
-    return render(request, 'relationship_app/add_book.html', context)
+    return render(request, 'relationship_app/book_form.html', context)
 
 
 @login_required
-@permission_required('relationship_app.can_change_book', raise_exception=True)
+@permission_required('relationship_app.change_book', raise_exception=True)  # Changed to standard permission name
 def edit_book(request, book_id):
-    """Edit an existing book - requires can_change_book permission"""
+    """Edit an existing book - requires change_book permission"""
     book = get_object_or_404(Book, id=book_id)
     
     if request.method == 'POST':
-        form = BookForm(request.POST, instance=book)
+        form = BookForm(request.POST, request.FILES, instance=book)
         if form.is_valid():
             book = form.save()
             messages.success(request, f'Book "{book.title}" has been updated successfully!')
-            return redirect('relationship_app:list_books')
+            return redirect('list_books')
     else:
         form = BookForm(instance=book)
     
@@ -107,20 +107,20 @@ def edit_book(request, book_id):
         'user': request.user,
         'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
     }
-    return render(request, 'relationship_app/edit_book.html', context)
+    return render(request, 'relationship_app/book_form.html', context)
 
 
 @login_required
-@permission_required('relationship_app.can_delete_book', raise_exception=True)
+@permission_required('relationship_app.delete_book', raise_exception=True)  # Changed to standard permission name
 def delete_book(request, book_id):
-    """Delete a book - requires can_delete_book permission"""
+    """Delete a book - requires delete_book permission"""
     book = get_object_or_404(Book, id=book_id)
     
     if request.method == 'POST':
         book_title = book.title
         book.delete()
         messages.success(request, f'Book "{book_title}" has been deleted successfully!')
-        return redirect('relationship_app:list_books')
+        return redirect('list_books')
     
     context = {
         'book': book,
@@ -142,7 +142,6 @@ def admin_view(request):
         'page_title': 'Admin Dashboard',
         'welcome_message': f'Welcome {request.user.username}! You have administrator privileges.',
     }
-    # Template: relationship_app/admin_view.html
     return render(request, 'relationship_app/admin_view.html', context)
 
 
@@ -156,7 +155,6 @@ def librarian_view(request):
         'page_title': 'Librarian Dashboard',
         'welcome_message': f'Welcome {request.user.username}! You have librarian access.',
     }
-    # Template: relationship_app/librarian_view.html
     return render(request, 'relationship_app/librarian_view.html', context)
 
 
@@ -170,7 +168,6 @@ def member_view(request):
         'page_title': 'Member Dashboard',
         'welcome_message': f'Welcome {request.user.username}! You have member access.',
     }
-    # Template: relationship_app/member_view.html
     return render(request, 'relationship_app/member_view.html', context)
 
 
@@ -185,12 +182,29 @@ def access_denied_view(request):
 
 @login_required
 def home_view(request):
-    """Home view that shows different content based on user role"""
-    user_role = request.user.profile.role if hasattr(request.user, 'profile') else 'No Role'
+    """Home view that redirects to appropriate dashboard based on role"""
+    if not hasattr(request.user, 'profile'):
+        return redirect('access_denied')
     
+    role = request.user.profile.role
+    if role == ROLES['ADMIN']:
+        return redirect('admin_view')
+    elif role == ROLES['LIBRARIAN']:
+        return redirect('librarian_view')
+    elif role == ROLES['MEMBER']:
+        return redirect('member_view')
+    else:
+        return redirect('access_denied')
+
+
+# Additional view for book details
+@login_required
+def book_detail(request, book_id):
+    """View details of a specific book"""
+    book = get_object_or_404(Book, id=book_id)
     context = {
+        'book': book,
         'user': request.user,
-        'role': user_role,
-        'page_title': 'Dashboard Home',
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
     }
-    return render(request, 'relationship_app/home.html', context)
+    return render(request, 'relationship_app/book_detail.html', context)
