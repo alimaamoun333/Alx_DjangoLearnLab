@@ -121,3 +121,4 @@ def home_view(request):
         'page_title': 'Dashboard Home',
     }
     return render(request, 'relationship_app/home.html', context)
+    # pass
