@@ -1,6 +1,7 @@
 # relationship_app/urls.py
 
 from django.urls import path
+from django.contrib.auth.views import LoginView, LogoutView
 from .views import list_books
 from . import views
 
@@ -8,9 +9,9 @@ from . import views
 app_name = 'relationship_app'
 
 urlpatterns = [
-    # Authentication URLs
-    path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    # Authentication URLs using Django's built-in views
+    path('login/', LoginView.as_view(template_name='relationship_app/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(template_name='relationship_app/logout.html'), name='logout'),
     path('register/', views.register, name='register'),
     
     # Function-based view for listing all books
