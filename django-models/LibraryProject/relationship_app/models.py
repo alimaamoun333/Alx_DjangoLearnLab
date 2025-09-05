@@ -4,6 +4,56 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class Author(models.Model):
+    """Author model for book authors"""
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.name
+
+
+class Book(models.Model):
+    """Book model with custom permissions for role-based access control"""
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    publication_date = models.DateField()
+    isbn = models.CharField(max_length=13, unique=True)
+    pages = models.IntegerField()
+    cover = models.CharField(max_length=20, choices=[
+        ('hardcover', 'Hardcover'),
+        ('paperback', 'Paperback'),
+    ])
+    language = models.CharField(max_length=30, default='English')
+    
+    class Meta:
+        permissions = [
+            ('can_add_book', 'Can add book'),
+            ('can_change_book', 'Can change book'),
+            ('can_delete_book', 'Can delete book'),
+        ]
+    
+    def __str__(self):
+        return self.title
+
+
+class Library(models.Model):
+    """Library model"""
+    name = models.CharField(max_length=100)
+    location = models.CharField(max_length=200)
+    
+    def __str__(self):
+        return self.name
+
+
+class Librarian(models.Model):
+    """Librarian model"""
+    name = models.CharField(max_length=100)
+    library = models.ForeignKey(Library, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.name
+
+
 class UserProfile(models.Model):
     """
     UserProfile model to extend Django's built-in User model with role-based access control.

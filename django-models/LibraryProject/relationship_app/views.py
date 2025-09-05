@@ -1,7 +1,20 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Book, Author, UserProfile
+from django.forms import ModelForm
+
+
+class BookForm(ModelForm):
+    """Form for creating and editing books"""
+    class Meta:
+        model = Book
+        fields = ['title', 'author', 'publication_date', 'isbn', 'pages', 'cover', 'language']
+        widgets = {
+            'publication_date': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 
 def is_admin(user):
@@ -34,6 +47,91 @@ def is_member(user):
         return False
 
 
+# Book list view - accessible to all authenticated users
+@login_required
+def list_books(request):
+    """Display list of all books"""
+    books = Book.objects.all()
+    context = {
+        'books': books,
+        'user': request.user,
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
+    }
+    return render(request, 'relationship_app/list_books.html', context)
+
+
+# Permission-protected views for book operations
+@login_required
+@permission_required('relationship_app.can_add_book', raise_exception=True)
+def add_book(request):
+    """Add a new book - requires can_add_book permission"""
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            book = form.save()
+            messages.success(request, f'Book "{book.title}" has been added successfully!')
+            return redirect('relationship_app:list_books')
+    else:
+        form = BookForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Add New Book',
+        'action': 'Add',
+        'user': request.user,
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
+    }
+    return render(request, 'relationship_app/add_book.html', context)
+
+
+@login_required
+@permission_required('relationship_app.can_change_book', raise_exception=True)
+def edit_book(request, book_id):
+    """Edit an existing book - requires can_change_book permission"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    if request.method == 'POST':
+        form = BookForm(request.POST, instance=book)
+        if form.is_valid():
+            book = form.save()
+            messages.success(request, f'Book "{book.title}" has been updated successfully!')
+            return redirect('relationship_app:list_books')
+    else:
+        form = BookForm(instance=book)
+    
+    context = {
+        'form': form,
+        'book': book,
+        'page_title': f'Edit "{book.title}"',
+        'action': 'Edit',
+        'user': request.user,
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
+    }
+    return render(request, 'relationship_app/edit_book.html', context)
+
+
+@login_required
+@permission_required('relationship_app.can_delete_book', raise_exception=True)
+def delete_book(request, book_id):
+    """Delete a book - requires can_delete_book permission"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    if request.method == 'POST':
+        book_title = book.title
+        book.delete()
+        messages.success(request, f'Book "{book_title}" has been deleted successfully!')
+        return redirect('relationship_app:list_books')
+    
+    context = {
+        'book': book,
+        'page_title': f'Delete "{book.title}"',
+        'user': request.user,
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
+    }
+    return render(request, 'relationship_app/delete_book.html', context)
+
+
+# Role-based views from previous implementation
 @login_required
 @user_passes_test(is_admin, login_url='/access-denied/')
 def admin_view(request):
