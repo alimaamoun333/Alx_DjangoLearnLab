@@ -120,4 +120,4 @@ def home_view(request):
         'role': user_role,
         'page_title': 'Dashboard Home',
     }
-    return render(request, 'home.html', context)
+    return render(request, 'relationship_app/home.html', context)
