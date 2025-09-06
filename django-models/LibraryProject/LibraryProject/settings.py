@@ -147,7 +147,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    'bookshelf',
+    'relationship_app',
     # Your app name here (replace 'rbac' with your actual app name)
     'rbac',  # or whatever you named your app
 ]
