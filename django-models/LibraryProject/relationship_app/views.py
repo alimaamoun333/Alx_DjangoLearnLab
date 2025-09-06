@@ -7,7 +7,7 @@ from .models import Book, Author, UserProfile
 from django.forms import ModelForm
 
 
-class BookForm(ModelForm):
+class BookForm(forms.ModelForm):
     """Form for creating and editing books"""
     class Meta:
         model = Book
