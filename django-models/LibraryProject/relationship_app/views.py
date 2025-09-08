@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django import forms
 from django.views.generic.detail import DetailView
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
 from .models import Book, Author, UserProfile, Library
 from .models import Library
 
