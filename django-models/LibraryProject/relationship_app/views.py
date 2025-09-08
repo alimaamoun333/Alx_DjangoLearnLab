@@ -5,7 +5,7 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django import forms
-from .models import Book, Author, UserProfile
+from .models import Book, Author, UserProfile, Library
 
 
 class BookForm(forms.ModelForm):
@@ -46,6 +46,23 @@ def is_member(user):
         return user.profile.role == 'Member'
     except:
         return False
+
+
+# Library detail view
+@login_required
+def library_detail(request, library_id):
+    """Display details of a specific library"""
+    library = get_object_or_404(Library, id=library_id)
+    # Get all librarians associated with this library
+    librarians = library.librarian_set.all()
+    
+    context = {
+        'library': library,
+        'librarians': librarians,
+        'user': request.user,
+        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
+    }
+    return render(request, 'relationship_app/library_detail.html', context)
 
 
 # Book list view - accessible to all authenticated users
