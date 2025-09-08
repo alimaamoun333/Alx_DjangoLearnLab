@@ -69,7 +69,7 @@ def register(request):
         'form': form,
         'page_title': 'Register',
     }
-    return render(request, 'registration/register.html', context)
+    return render(request, 'relationship_app/register.html', context)
 
 
 @login_required
