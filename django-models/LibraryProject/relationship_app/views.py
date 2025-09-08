@@ -7,7 +7,7 @@ from django.contrib import messages
 from django import forms
 from django.views.generic.detail import DetailView
 from .models import Book, Author, UserProfile, Library
-from .models import  Library
+from .models import Library
 
 class BookForm(forms.ModelForm):
     """Form for creating and editing books"""
