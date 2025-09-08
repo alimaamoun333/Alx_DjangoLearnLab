@@ -52,6 +52,26 @@ def is_member(user):
 
 
 # Library detail view
+def register(request):
+    """User registration view"""
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Log the user in after registration
+            login(request, user)
+            messages.success(request, f'Welcome {user.username}! Your account has been created successfully.')
+            return redirect('relationship_app:home')
+    else:
+        form = UserCreationForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Register',
+    }
+    return render(request, 'registration/register.html', context)
+
+
 @login_required
 def library_detail(request, library_id):
     """Display details of a specific library"""
