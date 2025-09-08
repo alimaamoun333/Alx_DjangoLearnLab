@@ -51,7 +51,25 @@ def is_member(user):
         return False
 
 
-# Library detail view
+# Library detail view (class-based)
+class LibraryDetailView(DetailView):
+    """Class-based view for library details"""
+    model = Library
+    template_name = 'relationship_app/library_detail.html'
+    context_object_name = 'library'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add librarians associated with this library
+        context['librarians'] = self.object.librarian_set.all()
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'profile'):
+            context['user_role'] = self.request.user.profile.role
+        else:
+            context['user_role'] = 'Unknown'
+        return context
+
+
+# Library detail view (function-based)
 def register(request):
     """User registration view"""
     if request.method == 'POST':
