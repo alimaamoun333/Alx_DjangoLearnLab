@@ -123,6 +123,26 @@ SESSION_COOKIE_SECURE = True    # Send session cookies only over HTTPS
 SECURE_SSL_REDIRECT = True      # Redirect all HTTP to HTTPS
 
 
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom User model
+AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+CSRF_COOKIE_SECURE = True        # Send CSRF cookies only over HTTPS
+SESSION_COOKIE_SECURE = True     # Send session cookies only over HTTPS
+SECURE_SSL_REDIRECT = True       # Redirect all HTTP to HTTPS
+
+# HTTP Strict Transport Security (HSTS)
+SECURE_HSTS_SECONDS = 31536000   # 1 year (recommended)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply to all subdomains
+SECURE_HSTS_PRELOAD = True       # Allow site to be included in browser preload list
+
+
 if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
