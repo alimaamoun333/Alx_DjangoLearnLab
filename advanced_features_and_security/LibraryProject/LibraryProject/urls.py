@@ -19,9 +19,11 @@ from django.urls import path, include  # Added missing include import
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("", include("bookshelf.urls")),  # ✅ Make sure bookshelf app URLs are included
     path('', include('relationship_app.urls')),  # Added missing comma
     path('', include('rbac.urls')),
 ]
+
 
 try:
     import debug_toolbar

@@ -32,7 +32,7 @@ def delete_book(request, pk):
     return redirect("book_list")
 
 
-# ✅ ExampleForm view
+# ✅ ExampleForm usage view
 def example_form_view(request):
     if request.method == "POST":
         form = ExampleForm(request.POST)
