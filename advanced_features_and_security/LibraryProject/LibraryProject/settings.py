@@ -94,3 +94,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User model
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom User model
+AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+CSRF_COOKIE_SECURE = True      # Send CSRF cookies only over HTTPS
+SESSION_COOKIE_SECURE = True   # Send session cookies only over HTTPS
+
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
