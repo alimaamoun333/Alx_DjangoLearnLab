@@ -1,5 +1,5 @@
 """
-ASGI config for advanced_features_and_security project.
+ASGI config for LibraryProject project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Libraries</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #28a745;
+        }
+        .library-card {
+            background-color: #f8f9fa;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .library-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .nav-links {
+            margin: 20px 0;
+        }
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="{% url 'relationship_app:list_books' %}">All Books</a>
+        <a href="{% url 'relationship_app:library_list' %}">All Libraries</a>
+    </div>
+    
+    <h1>All Libraries</h1>
+    
+    {% for library in libraries %}
+    <div class="library-card">
+        <div class="library-name">
+            <a href="{% url 'relationship_app:library_detail' library.pk %}">{{ library.name }}</a>
+        </div>
+        <p>Books: {{ library.books.count }}</p>
+        {% if library.librarian %}
+        <p>Librarian: {{ library.librarian.name }}</p>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>No libraries found.</p>
+    {% endfor %}
+</body>
+</html>

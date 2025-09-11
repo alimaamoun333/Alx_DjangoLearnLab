@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 50px;
+            text-align: center;
+        }
+        
+        .error-icon {
+            font-size: 5rem;
+            color: #e74c3c;
+            margin-bottom: 30px;
+        }
+        
+        .error-title {
+            font-size: 2.5rem;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        .error-message {
+            font-size: 1.2rem;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 5px solid #e74c3c;
+        }
+        
+        .user-info h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .user-info p {
+            color: #4a5568;
+            margin: 5px 0;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .actions {
+            margin-top: 40px;
+        }
+        
+        .btn {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-home {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-home:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        
+        .help-text {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">🚫</div>
+        <h1 class="error-title">Access Denied</h1>
+        <p class="error-message">{{ message }}</p>
+        
+        <div class="user-info">
+            <h3>Current User Information</h3>
+            {% if user.is_authenticated %}
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
+                <p><strong>Current Role:</strong> <span class="role-badge">{{ user_role }}</span></p>
+            {% else %}
+                <p>You are not currently logged in.</p>
+            {% endif %}
+        </div>
+        
+        <div class="actions">
+            <a href="{% url 'relationship_app:home' %}" class="btn btn-home">🏠 Go to Dashboard</a>
+            <a href="javascript:history.back()" class="btn btn-back">← Go Back</a>
+        </div>
+        
+        <div class="help-text">
+            <p><strong>Why am I seeing this page?</strong></p>
+            <p>You attempted to access a page that requires specific permissions. Your current role ({{ user_role }}) doesn't have the necessary privileges to view this content.</p>
+            <p>If you believe this is an error, please contact your system administrator.</p>
+        </div>
+    </div>
+</body>
+</html>

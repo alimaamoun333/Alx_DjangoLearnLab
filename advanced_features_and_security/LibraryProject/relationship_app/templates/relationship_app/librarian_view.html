@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c7a7b, #38a169);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .librarian-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .panel-card {
+            background: #f0fdf4;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #22c55e;
+            transition: transform 0.3s ease;
+        }
+        
+        .panel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .panel-card h3 {
+            color: #166534;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .panel-card ul {
+            list-style-type: none;
+        }
+        
+        .panel-card li {
+            padding: 8px 0;
+            color: #374151;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .panel-card li:before {
+            content: "📚";
+            position: absolute;
+            left: 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .action-btn {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            border-color: #10b981;
+            background: #ecfdf5;
+            transform: translateY(-3px);
+        }
+        
+        .action-btn .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .navigation {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .logout-link {
+            background: #e74c3c !important;
+        }
+        
+        .logout-link:hover {
+            background: #c0392b !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ page_title }}</h1>
+            <p>{{ welcome_message }}</p>
+            <div class="role-badge">{{ role }} Access</div>
+        </div>
+        
+        <div class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">5,847</div>
+                    <div class="stat-label">Total Books</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">324</div>
+                    <div class="stat-label">Books Checked Out</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">42</div>
+                    <div class="stat-label">Overdue Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">New Acquisitions</div>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <a href="#" class="action-btn">
+                    <span class="icon">➕</span>
+                    <h4>Add New Book</h4>
+                    <p>Catalog new acquisitions</p>
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="icon">🔍</span>
+                    <h4>Search Catalog</h4>
+                    <p>Find books and resources</p>
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="icon">📋</span>
+                    <h4>Check Out/In</h4>
+                    <p>Process book transactions</p>
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="icon">⚠️</span>
+                    <h4>Overdue Reports</h4>
+                    <p>Manage overdue items</p>
+                </a>
+            </div>
+            
+            <div class="librarian-panel">
+                <div class="panel-card">
+                    <h3>📖 Catalog Management</h3>
+                    <ul>
+                        <li>Add, edit, and remove books</li>
+                        <li>Update book information and status</li>
+                        <li>Manage book categories and genres</li>
+                        <li>Process new acquisitions</li>
+                        <li>Handle book reservations</li>
+                    </ul>
+                </div>
+                
+                <div class="panel-card">
+                    <h3>👥 Member Services</h3>
+                    <ul>
+                        <li>Process member registrations</li>
+                        <li>Check out and return books</li>
+                        <li>Handle member inquiries</li>
+                        <li>Manage member accounts</li>
+                        <li>Process fine payments</li>
+                    </ul>
+                </div>
+                
+                <div class="panel-card">
+                    <h3>📊 Reports & Records</h3>
+                    <ul>
+                        <li>Generate circulation reports</li>
+                        <li>Track popular books and authors</li>
+                        <li>Monitor inventory status</li>
+                        <li>Overdue item management</li>
+                        <li>Collection development reports</li>
+                    </ul>
+                </div>
+                
+                <div class="panel-card">
+                    <h3>🛠️ Library Operations</h3>
+                    <ul>
+                        <li>Schedule and manage events</li>
+                        <li>Maintain library equipment</li>
+                        <li>Order new books and materials</li>
+                        <li>Handle interlibrary loans</li>
+                        <li>Coordinate with other libraries</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <a href="{% url 'relationship_app:home' %}" class="nav-link">🏠 Home</a>
+                <a href="{% url 'relationship_app:member_dashboard' %}" class="nav-link">👤 Member View</a>
+                <a href="{% url 'relationship_app:logout' %}" class="nav-link logout-link">🚪 Logout</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

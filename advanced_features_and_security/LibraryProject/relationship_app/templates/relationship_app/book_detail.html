@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }} - Book Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+        }
+        .book-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .nav-links {
+            margin: 20px 0;
+        }
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="{% url 'relationship_app:list_books' %}">All Books</a>
+        <a href="{% url 'relationship_app:library_list' %}">All Libraries</a>
+    </div>
+    
+    <h1>{{ book.title }}</h1>
+    
+    <div class="book-info">
+        <p><strong>Author:</strong> {{ book.author.name }}</p>
+        <p><strong>Available in Libraries:</strong></p>
+        <ul>
+            {% for library in book.libraries.all %}
+            <li><a href="{% url 'relationship_app:library_detail' library.pk %}">{{ library.name }}</a></li>
+            {% empty %}
+            <li>Not available in any library</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
