@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Book
+from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser, Book
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
@@ -41,3 +42,14 @@ class BookAdmin(admin.ModelAdmin):
         self.message_user(request, f"{queryset.count()} books marked as classics.")
     
     mark_as_classic.short_description = "Mark selected books as classics"
+
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {'fields': ('date_of_birth', 'profile_photo')}),
+    )
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'publication_year')
+    search_fields = ('title', 'author')
