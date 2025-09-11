@@ -50,3 +50,8 @@ class CustomUserAdmin(UserAdmin):
 # Register models explicitly
 admin.site.register(Book, BookAdmin)
 admin.site.register(CustomUser, CustomUserAdmin)
+
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'is_staff']

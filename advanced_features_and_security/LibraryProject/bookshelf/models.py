@@ -49,3 +49,10 @@ class Book(models.Model):
         ordering = ["publication_year"]
         verbose_name = "Book"
         verbose_name_plural = "Books"
+class CustomUser(AbstractUser):
+    # Add extra fields if you need them
+    # Example: role, phone, etc.
+    role = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return self.username

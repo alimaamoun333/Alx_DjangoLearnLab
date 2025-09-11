@@ -90,3 +90,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Custom User model
+AUTH_USER_MODEL = 'bookshelf.CustomUser'
