@@ -31,7 +31,13 @@ class CustomUser(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     profile_photo = models.ImageField(upload_to="profile_photos/", null=True, blank=True)
 
-    objects = CustomUserManager()  # attach custom manager
+    objects = CustomUserManager()
+
+    class Meta:
+        permissions = [
+            ("can_create", "Can create objects"),
+            ("can_delete", "Can delete objects"),
+        ]
 
     def __str__(self):
         return self.username
@@ -49,10 +55,5 @@ class Book(models.Model):
         ordering = ["publication_year"]
         verbose_name = "Book"
         verbose_name_plural = "Books"
-class CustomUser(AbstractUser):
-    # Add extra fields if you need them
-    # Example: role, phone, etc.
-    role = models.CharField(max_length=50, blank=True, null=True)
 
-    def __str__(self):
-        return self.username
+
