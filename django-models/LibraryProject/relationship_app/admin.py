@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from .models import UserProfile, Book, Author, Library, Librarian
-
+from django.utils.translation import gettext_lazy as _
 
 class UserProfileInline(admin.StackedInline):
     """
@@ -55,7 +55,8 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_filter = ('role', 'user__date_joined', 'user__is_active')
     search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
     ordering = ('user__username',)
-    
+    actions = ['make_admin', 'make_librarian', 'make_member', 'grant_all_book_permissions', 'grant_librarian_permissions']
+
     def user_email(self, obj):
         """Display user email in profile admin."""
         return obj.user.email
@@ -78,41 +79,21 @@ class UserProfileAdmin(admin.ModelAdmin):
             perms.append('Delete')
         return ', '.join(perms) if perms else 'None'
     get_book_permissions.short_description = 'Book Permissions'
-    
-    # Custom actions
-    actions = ['make_admin', 'make_librarian', 'make_member', 'grant_all_book_permissions', 'grant_librarian_permissions']
-    
+
     def make_admin(self, request, queryset):
         """Bulk action to set selected users as Admin."""
         count = queryset.update(role='Admin')
-        # Librarian Group - Add and Edit permissions
-        librarian_group, created = Group.objects.get_or_create(name='Librarians')
-        if created:
-            librarian_perms = Permission.objects.filter(
-                codename__in=['can_add_book', 'can_change_book']
-            )
-            librarian_group.permissions.set(librarian_perms)
-        
-        # Member Group - No book management permissions
-        member_group, created = Group.objects.get_or_create(name='Members')
-        # Members don't get book management permissions by default
-        
-    except Exception as e:
-        print(f"Error creating permission groups: {e}")
-
-
-# Call the function to create groups when admin is loaded
-create_permission_groups() Grant all permissions to Admins
         for profile in queryset:
             user = profile.user
-            user.user_permissions.add(
+            perms = [
                 Permission.objects.get(codename='can_add_book'),
                 Permission.objects.get(codename='can_change_book'),
                 Permission.objects.get(codename='can_delete_book')
-            )
+            ]
+            user.user_permissions.add(*perms)
         self.message_user(request, f'{count} users updated to Admin role with full permissions.')
     make_admin.short_description = 'Set selected users as Admin (with all book permissions)'
-    
+
     def make_librarian(self, request, queryset):
         """Bulk action to set selected users as Librarian."""
         count = queryset.update(role='Librarian')
@@ -123,26 +104,22 @@ create_permission_groups() Grant all permissions to Admins
                 Permission.objects.get(codename='can_add_book'),
                 Permission.objects.get(codename='can_change_book')
             )
-            user.user_permissions.remove(
-                Permission.objects.get(codename='can_delete_book')
-            )
+            user.user_permissions.remove(Permission.objects.get(codename='can_delete_book'))
         self.message_user(request, f'{count} users updated to Librarian role with add/edit permissions.')
     make_librarian.short_description = 'Set selected users as Librarian (with add/edit permissions)'
-    
+
     def make_member(self, request, queryset):
         """Bulk action to set selected users as Member."""
         count = queryset.update(role='Member')
         # Remove all book permissions from Members
         for profile in queryset:
             user = profile.user
-            user.user_permissions.remove(
-                Permission.objects.get(codename='can_add_book'),
-                Permission.objects.get(codename='can_change_book'),
-                Permission.objects.get(codename='can_delete_book')
-            )
+            user.user_permissions.remove(Permission.objects.get(codename='can_add_book'))
+            user.user_permissions.remove(Permission.objects.get(codename='can_change_book'))
+            user.user_permissions.remove(Permission.objects.get(codename='can_delete_book'))
         self.message_user(request, f'{count} users updated to Member role (no book permissions).')
     make_member.short_description = 'Set selected users as Member (no book permissions)'
-    
+
     def grant_all_book_permissions(self, request, queryset):
         """Grant all book permissions to selected users."""
         count = 0
@@ -156,7 +133,7 @@ create_permission_groups() Grant all permissions to Admins
             count += 1
         self.message_user(request, f'Granted all book permissions to {count} users.')
     grant_all_book_permissions.short_description = 'Grant all book permissions'
-    
+
     def grant_librarian_permissions(self, request, queryset):
         """Grant librarian-level permissions (add and change)."""
         count = 0
@@ -242,4 +219,22 @@ def create_permission_groups():
             )
             admin_group.permissions.set(admin_perms)
         
-        #
+        # Librarian Group - Add and change permissions only
+        librarian_group, created = Group.objects.get_or_create(name='Librarians')
+        if created:
+            librarian_perms = Permission.objects.filter(
+                codename__in=['can_add_book', 'can_change_book']
+            )
+            librarian_group.permissions.set(librarian_perms)
+        
+        # Member Group - No special permissions
+        member_group, created = Group.objects.get_or_create(name='Members')
+        if created:
+            # Members have no special permissions by default
+            pass
+            
+    except Exception as e:
+        print(f"Error creating permission groups: {e}")
+
+# Call the function to create groups when admin module is loaded
+create_permission_groups()

@@ -31,6 +31,11 @@ class Book(models.Model):
             ('can_change_book', 'Can change book'),
             ('can_delete_book', 'Can delete book'),
         ]
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['author']),
+            models.Index(fields=['isbn']),
+        ]
     
     def __str__(self):
         return self.title
@@ -40,6 +45,7 @@ class Library(models.Model):
     """Library model"""
     name = models.CharField(max_length=100)
     location = models.CharField(max_length=200)
+    books = models.ManyToManyField('Book', blank=True, related_name='libraries')
     
     def __str__(self):
         return self.name
@@ -115,25 +121,3 @@ def save_user_profile(sender, instance, **kwargs):
     else:
         # Create profile if it doesn't exist (edge case handling)
         UserProfile.objects.create(user=instance)
-class Library(models.Model):
-    name = models.CharField(max_length=100)
-    location = models.CharField(max_length=200)
-    books = models.ManyToManyField('Book', blank=True, related_name='libraries')
-    
-    def __str__(self):
-        return self.name   
-             
-class Book(models.Model):
-    # ... existing fields
-    
-    class Meta:
-        permissions = [
-            ('can_add_book', 'Can add book'),
-            ('can_change_book', 'Can change book'),
-            ('can_delete_book', 'Can delete book'),
-        ]
-        indexes = [
-            models.Index(fields=['title']),
-            models.Index(fields=['author']),
-            models.Index(fields=['isbn']),
-        ]        

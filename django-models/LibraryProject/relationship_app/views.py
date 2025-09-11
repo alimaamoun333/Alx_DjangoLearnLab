@@ -69,7 +69,6 @@ class LibraryDetailView(DetailView):
         return context
 
 
-# Library detail view (function-based)
 def register(request):
     """User registration view"""
     if request.method == 'POST':
@@ -127,9 +126,14 @@ def add_book(request):
     if request.method == 'POST':
         form = BookForm(request.POST)
         if form.is_valid():
-            book = form.save()
-            messages.success(request, f'Book "{book.title}" has been added successfully!')
-            return redirect('relationship_app:list_books')
+            try:
+                book = form.save()
+                messages.success(request, f'Book "{book.title}" has been added successfully!')
+                return redirect('relationship_app:list_books')
+            except Exception as e:
+                messages.error(request, f'Error saving book: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = BookForm()
     
@@ -168,32 +172,6 @@ def edit_book(request, book_id):
     }
     return render(request, 'relationship_app/edit_book.html', context)
 
-@login_required
-@permission_required('relationship_app.can_add_book', raise_exception=True)
-def add_book(request):
-    """Add a new book - requires can_add_book permission"""
-    if request.method == 'POST':
-        form = BookForm(request.POST)
-        if form.is_valid():
-            try:
-                book = form.save()
-                messages.success(request, f'Book "{book.title}" has been added successfully!')
-                return redirect('relationship_app:list_books')
-            except Exception as e:
-                messages.error(request, f'Error saving book: {str(e)}')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = BookForm()
-    
-    context = {
-        'form': form,
-        'page_title': 'Add New Book',
-        'action': 'Add',
-        'user': request.user,
-        'user_role': request.user.profile.role if hasattr(request.user, 'profile') else 'Unknown',
-    }
-    return render(request, 'relationship_app/add_book.html', context)
 
 @login_required
 @permission_required('relationship_app.can_delete_book', raise_exception=True)
