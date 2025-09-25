@@ -8,16 +8,27 @@ from .serializers import BookSerializer
 # BOOK CRUD API USING GENERIC VIEWS
 # ---------------------------
 
-class BookListView(generics.ListAPIView):
-    """
-    GET: List all books.
-    - Unauthenticated users: read-only
-    - Authenticated users: read-only
-    """
+class BookListView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
 
+    # Filtering, searching, ordering
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['title', 'author', 'publication_year']  # Filtering
+    search_fields = ['title', 'author__name']  # Searching
+    ordering_fields = ['title', 'publication_year']  # Ordering
+    ordering = ['title']  # Default ordering
+
+"""
+BookListView:
+- Supports filtering by title, author, and publication_year.
+- Supports searching across title and author name.
+- Supports ordering by title and publication_year.
+Examples:
+    /api/books/?author=1
+    /api/books/?search=python
+    /api/books/?ordering=-publication_year
+"""
 
 class BookDetailView(generics.RetrieveAPIView):
     """
@@ -64,3 +75,4 @@ class BookDeleteView(generics.DestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
+
